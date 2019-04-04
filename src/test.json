@@ -1,0 +1,23 @@
+{
+    "payload": {
+        "version": "v2",
+        "content": {
+            "messages": [
+                {
+                   "type": "text",
+                   "text": "simple text"    
+                }
+            ],
+            "quick_replies": [ //optional
+                {
+                        "type": "node",
+                        "caption": "Quick reply text",
+                        "target": "My Content"
+                },
+                {
+                    ...Another quick replies
+                }
+            ]
+        }
+    }
+}

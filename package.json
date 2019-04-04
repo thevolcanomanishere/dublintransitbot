@@ -1,0 +1,36 @@
+{
+  "name": "functions",
+  "engines": {
+    "node": "8"
+  },
+  "scripts": {
+    "lint": "tslint --project tsconfig.json",
+    "build": "tsc",
+    "serve": "npm run build && firebase serve --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "firebase-admin": "~7.0.0",
+    "firebase-functions": "^2.2.0",
+    "fuzzyset.js": "^0.0.8",
+    "path": "^0.12.7",
+    "qs": "^6.6.0",
+    "request": "^2.88.0",
+    "tabletojson": "^1.0.4",
+    "xml-js": "^1.6.11",
+    "xml2js": "^0.4.19",
+    "xml2json": "^0.11.2"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.10",
+    "ts-node": "^8.0.2",
+    "tslint": "~5.8.0",
+    "typescript": "3.3.1"
+  },
+  "private": true
+}

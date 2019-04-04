@@ -1,0 +1,80 @@
+<table id="rtpi-results" cellspacing="0">
+    <tr class="yellow">
+        <th width="10%">
+                                        Route
+        </th>
+        <th width="40%">
+                                        Destination
+        </th>
+        <th width="20%">
+                                        Expected Time
+        </th>
+        <th width="30%">
+                                        Notes
+        </th>
+    </tr>
+    <tr class="even">
+        <td>
+                                    83
+        </td>
+        <td>
+                                    Kimmage via City Centre
+        </td>
+        <td>
+                                    Due
+        </td>
+        <td>
+            <img src="/Templates/Public/Styles/Images/icon-small-accessible.gif" alt="Accessible" class='' />
+            <img src="/Templates/Public/Styles/Images/icon-small-R-pred.gif" alt="R Prediction" class="display_none" />
+            <img src="/Templates/Public/Styles/Images/icon-small-E-pred.gif" alt="E Prediction" class="display_none" />
+        </td>
+    </tr>
+    <tr class="odd">
+        <td>
+                                    83
+        </td>
+        <td>
+                                    Kimmage via City Centre
+        </td>
+        <td>
+                                    16:22
+        </td>
+        <td>
+            <img src="/Templates/Public/Styles/Images/icon-small-accessible.gif" alt="Accessible" class='' />
+            <img src="/Templates/Public/Styles/Images/icon-small-R-pred.gif" alt="R Prediction" class="display_none" />
+            <img src="/Templates/Public/Styles/Images/icon-small-E-pred.gif" alt="E Prediction" class="display_none" />
+        </td>
+    </tr>
+    <tr class="even">
+        <td>
+                                    83
+        </td>
+        <td>
+                                    Kimmage via City Centre
+        </td>
+        <td>
+                                    16:35
+        </td>
+        <td>
+            <img src="/Templates/Public/Styles/Images/icon-small-accessible.gif" alt="Accessible" class='' />
+            <img src="/Templates/Public/Styles/Images/icon-small-R-pred.gif" alt="R Prediction" class="display_none" />
+            <img src="/Templates/Public/Styles/Images/icon-small-E-pred.gif" alt="E Prediction" class="display_none" />
+        </td>
+    </tr>
+    <tr class="odd">
+        <td>
+                                    83a
+        </td>
+        <td>
+                                    Kimmage via Tolka Estate
+        </td>
+        <td>
+                                    16:46
+        </td>
+        <td>
+            <img src="/Templates/Public/Styles/Images/icon-small-accessible.gif" alt="Accessible" class='' />
+            <img src="/Templates/Public/Styles/Images/icon-small-R-pred.gif" alt="R Prediction" class="display_none" />
+            <img src="/Templates/Public/Styles/Images/icon-small-E-pred.gif" alt="E Prediction" class="display_none" />
+        </td>
+    </tr>
+</table>
