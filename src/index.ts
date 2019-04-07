@@ -411,7 +411,7 @@ const response = {
     _attributes: {
       created: "2019-03-14T22:37:25",
       stop: "Cowper",
-      stopAbv: "COW"
+      stopAbv: "COW
     },
     message: {
       _text: "Green Line services operating normally"
