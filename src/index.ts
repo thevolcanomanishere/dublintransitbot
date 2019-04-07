@@ -14,6 +14,10 @@ import { start } from "repl";
 //  response.send("Hello from Firebase!");
 // });
 
+const locationRegex = RegExp(
+  "^([-+]?)([d]{1,2})(((.)(d+)(,)))(s*)(([-+]?)([d]{1,3})((.)(d+))?)$"
+);
+
 const fuzzyListLuas = () => {
   const red = luas_stops["Red Line"];
   const green = luas_stops["Green Line"];
@@ -92,45 +96,57 @@ const minsOrDue = text => {
 
 const generateTextForMultiple = trams => {
   const text = trams.map(tram => {
-    return `\n${tram.destination}: ${minsOrDue(tram.dueMins)}`;
+    return `${tram.destination}: ${minsOrDue(tram.dueMins)}`;
   });
 
-  return `${text.join("")}`;
+  return `${text.join("\n")}`;
 };
 
-const generateInboundAndOutboundLuas = apiResponse => {
+const generateInboundAndOutboundLuas = (
+  apiResponse,
+  stopName,
+  mini = false
+) => {
   const Inbound = apiResponse.direction[0].tram;
   const Outbound = apiResponse.direction[1].tram;
   let inboundMessage = "";
   let outboundMessage = "";
+  console.log(Inbound);
   if (isObject(Inbound)) {
     if (Inbound.destination === "No trams forecast") {
       inboundMessage = `\nInbound: \nNo trams forecast 😔`;
+    } else {
+      inboundMessage = `Inbound\n${Inbound.destination}: ${minsOrDue(
+        Inbound.dueMins
+      )}`;
     }
-    inboundMessage = `\nInbound: \n${Inbound.destination}: ${minsOrDue(
-      Inbound.dueMins
-    )}`;
   } else {
-    inboundMessage = `\nInbound: ${generateTextForMultiple(Inbound)}`;
+    inboundMessage = `Inbound\n${generateTextForMultiple(Inbound)}`;
   }
 
   if (isObject(Outbound)) {
     if (Inbound.destination === "No trams forecast") {
-      outboundMessage = `\nOutbound: \nNo trams forecast 😔`;
+      outboundMessage = `Outbound: \nNo trams forecast 😔`;
+    } else {
+      outboundMessage = `Outbound:\n${Outbound.destination} ${minsOrDue(
+        Outbound.dueMins
+      )}`;
     }
-    outboundMessage = `\nOutbound:\n${Outbound.destination} ${minsOrDue(
-      Outbound.dueMins
-    )}`;
   } else {
-    outboundMessage = `\nOutbound: ${generateTextForMultiple(Outbound)}`;
+    outboundMessage = `\nOutbound: \n${generateTextForMultiple(Outbound)}`;
   }
-  return `${inboundMessage}\n${outboundMessage}`;
+
+  return `Luas Live Info 🚈\n\nStop: ${stopName}\n\n${inboundMessage}\n${outboundMessage}`;
 };
 
 const generateInboundAndOutboundRail = (apiResponse, stopName) => {
   const list = apiResponse.ArrayOfObjStationData.objStationData;
-  const northboundList = list.filter(item => item.Direction === "Northbound");
-  const southboundList = list.filter(item => item.Direction === "Southbound");
+  const northboundList = list.filter(
+    item => item.Direction === "Northbound" && item.Duein < 46
+  );
+  const southboundList = list.filter(
+    item => item.Direction === "Southbound" && item.Duein < 46
+  );
 
   const northboundText = northboundList.map(item => {
     return `${item.Origin} -> ${item.Destination}: ${item.Duein} mins`;
@@ -140,7 +156,7 @@ const generateInboundAndOutboundRail = (apiResponse, stopName) => {
     return `${item.Origin} -> ${item.Destination}: ${item.Duein} mins`;
   });
 
-  return `Times for ${stopName}\n\nNorthbound\n${northboundText.join(
+  return `Irish Rail Live Info 🚂\n\nStop: ${stopName}\n\nNorthbound\n${northboundText.join(
     "\n"
   )}\n\nSouthbound\n${southboundText.join("\n")}`;
 };
@@ -159,6 +175,71 @@ const generateInboundAndOutboundRail = (apiResponse, stopName) => {
 //   });
 // };
 
+// const genereateQuickReplies = quickReplies => {
+//   const replies = quickReplies.map(reply => {
+//     return {
+//       type: "flow",
+//       caption: reply.text,
+//       target: "default"
+//     };
+//   });
+
+//   return "quick_replies".
+// };
+
+const isSharedStop = stopName => {
+  const sharedStopNames = ["broombridge", "connolly", "hueston"];
+  const lowerStopName = stopName.toLowerCase();
+  return sharedStopNames.includes(lowerStopName);
+};
+
+const dialogFlowWrapper = innerMessage => {
+  return {
+    payload: { facebook: { ...innerMessage } }
+  };
+};
+
+const createManychatMessage = (manychatApiMessage, stop_name) => {
+  if (isSharedStop(stop_name)) {
+    return {
+      version: "v2",
+      content: {
+        messages: [
+          {
+            type: "text",
+            text: manychatApiMessage
+          }
+        ],
+        quick_replies: [
+          {
+            type: "flow",
+            caption: `${stop_name} Luas`,
+            target: "default"
+          }
+        ]
+      }
+    };
+  }
+  return {
+    version: "v2",
+    content: {
+      messages: [
+        {
+          type: "text",
+          text: manychatApiMessage
+        }
+      ],
+      quick_replies: [
+        {
+          type: "flow",
+          caption: `${stop_name}`,
+          target: "default"
+        }
+      ]
+    }
+  };
+};
+
 const generateBusMessage = apiResponse => {
   if (apiResponse.length === 2)
     return "That is not a valid stop number. Please check here https://www.dublinbus.ie/RTPI/Sources-of-Real-Time-Information/";
@@ -170,53 +251,57 @@ const generateBusMessage = apiResponse => {
     return `Route: ${stop.Route}   Due: ${stop["Expected Time"]} `;
   });
 
-  return `Dublin Bus Times 🚌\n\nAddress: ${stopAddress}\n\n${liveInfo.join(
+  return `Dublin Bus Live Info 🚌\n\nAddress: ${stopAddress}\n\n${liveInfo.join(
     "\n"
   )}`;
 };
 
-const getLuasStopTimes = (stopName, res) => {
+const getLuasStopTimes = (stopName, res, justText = false) => {
   const luasStopInfo = getLuasStopInfo(stopName);
 
   return LuasApi(luasStopInfo.abrev).then(result => {
-    const startMessage = generateInboundAndOutboundLuas(result.stopInfo);
+    const startMessage = generateInboundAndOutboundLuas(
+      result.stopInfo,
+      stopName
+    );
 
-    return res.json({
-      fulfillmentText: `Getting times for ${
-        luasStopInfo.text
-      }🚈\n${startMessage}`
-    });
+    if (justText) {
+      return startMessage;
+    }
+
+    return res.json(
+      dialogFlowWrapper(createManychatMessage(startMessage, stopName))
+    );
   });
 };
 
-const getRailStopTimes = (stopName, res) => {
+const getRailStopTimes = (stopName, res, justText = false) => {
   console.log("Getting stop times for rail");
-  return RailApi(stopName).then(result => {
-    const startMessage = generateInboundAndOutboundRail(result, stopName);
-    return res.json({
-      fulfillmentText: startMessage
-    });
+  return RailApi(stopName).then(resultRailApi => {
+    const startMessage = generateInboundAndOutboundRail(
+      resultRailApi,
+      stopName
+    );
+
+    if (justText) {
+      return startMessage;
+    }
+
+    return res.json(
+      dialogFlowWrapper(createManychatMessage(startMessage, stopName))
+    );
   });
 };
 
-const getBusStopTimes = (stopNumber, res) => {
+const getBusStopTimes = (stopNumber, res, justText = false) => {
   return BusApi(stopNumber).then(result => {
     const startMessage = generateBusMessage(result);
-    return res.json({
-      payload: {
-        facebook: {
-          version: "v2",
-          content: {
-            messages: [
-              {
-                type: "text",
-                text: startMessage
-              }
-            ]
-          }
-        }
-      }
-    });
+    if (justText) {
+      return startMessage;
+    }
+    return res.json(
+      dialogFlowWrapper(createManychatMessage(startMessage, stopNumber))
+    );
   });
 };
 
@@ -237,6 +322,30 @@ const railEdgeCase = (stopName, res) => {
   }
 };
 
+export const manychatDublinTransit = functions
+  .region("europe-west1")
+  .https.onRequest((req, res) => {
+    const { type, luas_stop, dublin_bus, rail_stop } = req.body;
+
+    console.log(req.body);
+    switch (type) {
+      case "rail":
+        return getRailStopTimes(rail_stop, res, true).then(message => {
+          return res.json(createManychatMessage(message, rail_stop));
+        });
+      case "luas":
+        return getLuasStopTimes(luas_stop, res, true).then(message => {
+          return res.json(createManychatMessage(message, luas_stop));
+        });
+      case "bus":
+        return getBusStopTimes(dublin_bus, res, true).then(message => {
+          return res.json(createManychatMessage(message, dublin_bus));
+        });
+      default:
+        return res.json({ fulfillmentText: "Whoops, something broke" });
+    }
+  });
+
 const edgeCases = ["pearse", "connolly", "heuston"];
 
 export const dublinTransitBot = functions
@@ -245,46 +354,56 @@ export const dublinTransitBot = functions
     const intent = req.body.queryResult.intent.displayName;
     const queryText = req.body.queryResult.queryText;
     console.log(`Intent: ${intent}. Query: ${queryText}`);
+    try {
+      let luas_stop;
 
-    let luas_stop;
+      const queryWords = queryText.split();
 
-    const queryWords = queryText.split();
-
-    if (!isNaN(queryText)) {
-      return getBusStopTimes(queryText, res);
-    }
-
-    // check edge cases
-    if (edgeCases.includes(queryText.toLowerCase())) {
-      return railEdgeCase(queryText, res);
-    }
-
-    if (intent === "rail.get-stop-times") {
-      const stop_name = req.body.queryResult.parameters.rail_stops;
-      return getRailStopTimes(stop_name, res);
-    }
-
-    if (intent === "Default Fallback Intent" && queryWords.length === 1) {
-      const fsLuas = fuzzyListLuas();
-      const fsRail = fuzzyListRail();
-      const fuzzyLuasStop = fsLuas.get(queryText);
-      const fuzzyRailStop = fsRail.get(queryText);
-      console.log(`Fuzzy Luas: ${fuzzyLuasStop}`);
-      console.log(`Fuzzy Rail: ${fuzzyRailStop}`);
-
-      luas_stop = fuzzyLuasStop[0][1];
-
-      if (fuzzyLuasStop[0][0] > fuzzyRailStop[0][0]) {
-        return getLuasStopTimes(fuzzyLuasStop[0][1], res);
+      if (locationRegex.test(queryText)) {
+        console.log("Location matched");
+        return res.json({ fulfillmentText: queryText });
       }
-      return getRailStopTimes(fuzzyRailStop[0][1], res);
-    }
 
-    if (intent === "luas.get-stop-times") {
-      luas_stop = req.body.queryResult.parameters.luas_stop;
-      return getLuasStopTimes(luas_stop, res);
+      if (intent === "bus.get-stop-times") {
+        const { number } = req.body.queryResult.parameters;
+        return getBusStopTimes(number, res);
+      }
+
+      if (intent === "luas.get-stop-times") {
+        luas_stop = req.body.queryResult.parameters.luas_stop;
+        return getLuasStopTimes(luas_stop, res);
+      }
+
+      // check edge cases
+      if (edgeCases.includes(queryText.toLowerCase())) {
+        console.log(`Running edge case: ${queryText}`);
+        return railEdgeCase(queryText, res);
+      }
+
+      if (intent === "rail.get-stop-times") {
+        console.log(req.body.queryResult);
+        const stop_name = req.body.queryResult.parameters.rail_stops;
+        return getRailStopTimes(stop_name, res);
+      }
+
+      if (intent === "Default Fallback Intent" && queryWords.length === 1) {
+        const fsLuas = fuzzyListLuas();
+        const fsRail = fuzzyListRail();
+        const fuzzyLuasStop = fsLuas.get(queryText);
+        const fuzzyRailStop = fsRail.get(queryText);
+        console.log(`Fuzzy Luas: ${fuzzyLuasStop}`);
+        console.log(`Fuzzy Rail: ${fuzzyRailStop}`);
+
+        luas_stop = fuzzyLuasStop[0][1];
+
+        if (fuzzyLuasStop[0][0] > fuzzyRailStop[0][0]) {
+          return getLuasStopTimes(fuzzyLuasStop[0][1], res);
+        }
+        return getRailStopTimes(fuzzyRailStop[0][1], res);
+      }
+    } catch (error) {
+      return res.json({ fulfillmentText: error });
     }
-    return res.json({ fulfillmentText: "Oops, something went wrong." });
   });
 
 const response = {
