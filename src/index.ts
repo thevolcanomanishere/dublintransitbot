@@ -215,6 +215,11 @@ const createManychatMessage = (manychatApiMessage, stop_name) => {
             type: "flow",
             caption: `${stop_name} Luas`,
             target: "default"
+          },
+          {
+            type: "flow",
+            caption: `${stop_name} DART`,
+            target: "default"
           }
         ]
       }
@@ -405,51 +410,6 @@ export const dublinTransitBot = functions
       return res.json({ fulfillmentText: error });
     }
   });
-
-const response = {
-  stopInfo: {
-    _attributes: {
-      created: "2019-03-14T22:37:25",
-      stop: "Cowper",
-      stopAbv: "COW
-    },
-    message: {
-      _text: "Green Line services operating normally"
-    },
-    direction: [
-      {
-        _attributes: {
-          name: "Inbound"
-        },
-        tram: {
-          _attributes: {
-            dueMins: "9",
-            destination: "Broombridge"
-          }
-        }
-      },
-      {
-        _attributes: {
-          name: "Outbound"
-        },
-        tram: [
-          {
-            _attributes: {
-              dueMins: "1",
-              destination: "Bride's Glen"
-            }
-          },
-          {
-            _attributes: {
-              dueMins: "11",
-              destination: "Bride's Glen"
-            }
-          }
-        ]
-      }
-    ]
-  }
-};
 
 // export interface LuasResponse {
 //   stopInfo: StopInfo;
